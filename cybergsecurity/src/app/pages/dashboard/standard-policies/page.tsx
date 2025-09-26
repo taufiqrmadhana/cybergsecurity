@@ -1,91 +1,197 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+
 import { TableToolbar } from '@/app/components/policies/TableToolbar';
 import { DataTable, type ColumnDef } from '@/app/components/policies/DataTable';
 import { DocumentPreview } from '@/app/components/policies/DocumentPreview';
-import type { Document } from '@/app/types/document';
 import { useOnClickOutside } from '@/app/hooks/useOnclickOutside';
 
-const allDocumentsData: Document[] = [
-  { id: 'STD-001', title: 'Perjanjian Layanan Cloud', createdAt: '2025-09-15', updatedAt: '2025-09-20', category: 'Layanan TI', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'Accepted' },
-  { id: 'STD-002', title: 'Kontrak Pengadaan ATK', createdAt: '2025-09-12', updatedAt: '2025-09-18', category: 'Pengadaan', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'Accepted' },
-  { id: 'STD-003', title: 'Kerangka Kemitraan Strategis', createdAt: '2025-08-25', updatedAt: '2025-09-10', category: 'Kemitraan', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'On Review' },
-  { id: 'STD-004', title: 'Regulasi Logistik & Pengiriman', createdAt: '2025-08-10', updatedAt: '2025-09-05', category: 'Logistik', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'On Verification' },
-  { id: 'STD-005', title: 'SOP Jasa Kepelabuhan', createdAt: '2025-07-30', updatedAt: '2025-08-20', category: 'Kepelabuhan', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'New' },
-  { id: 'STD-006', title: 'NDA untuk Vendor TI', createdAt: '2025-07-20', updatedAt: '2025-08-15', category: 'Layanan TI', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'Conflict' },
-  { id: 'STD-007', title: 'Perjanjian Sewa Gudang', createdAt: '2025-06-15', updatedAt: '2025-07-01', category: 'Logistik', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'Accepted' },
-  { id: 'STD-008', title: 'Kontrak Jasa Konsultan', createdAt: '2025-06-10', updatedAt: '2025-06-25', category: 'Kemitraan', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'On Review' },
-  { id: 'STD-009', title: 'Panduan Pengadaan Software', createdAt: '2025-05-20', updatedAt: '2025-06-10', category: 'Pengadaan', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'New' },
-  { id: 'STD-010', title: 'Tarif Layanan Bongkar Muat', createdAt: '2025-05-01', updatedAt: '2025-05-15', category: 'Kepelabuhan', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'Accepted' },
-  { id: 'STD-011', title: 'Perjanjian Lisensi Merek', createdAt: '2025-04-18', updatedAt: '2025-04-28', category: 'Kemitraan', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'On Verification' },
-  { id: 'STD-012', title: 'Kontrak Pemeliharaan Sistem IT', createdAt: '2025-04-10', updatedAt: '2025-04-22', category: 'Layanan TI', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.', workflow: 'Accepted' },
-];
+export interface Document {
+  id: string; 
+  title: string;
+  description: string;
+  category: string; 
+  createdAt: string;
+  updatedAt: string;
+  filePath: string;
+}
 
-const workflowColorMap: { [key: string]: string } = {
-  'New': 'bg-blue-100 text-blue-800',
-  'On Verification': 'bg-sky-100 text-sky-800',
-  'On Review': 'bg-amber-100 text-amber-800',
-  'Conflict': 'bg-red-100 text-red-800',
-  'Accepted': 'bg-green-100 text-green-800',
+export interface BackendContract {
+  id: number; 
+  title: string;
+  description: string;
+  file_path: string; 
+  jenis_kontrak: string; 
+  created_by: string;
+  created_at: string; 
+  updated_at: string; 
+}
+
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const formatDate = (isoDate: string): string => {
+  if (!isoDate) return '';
+  return new Date(isoDate).toISOString().split('T')[0];
 };
 
+const mapBackendToDocument = (item: BackendContract): Document => ({
+  id: item.id.toString(),
+  title: item.title,
+  description: item.description || '',
+  category: item.jenis_kontrak || 'Lainnya', 
+  createdAt: formatDate(item.created_at),
+  updatedAt: formatDate(item.updated_at),
+  filePath: item.file_path || '',
+});
+
 export default function StandardPoliciesPage() {
-  const [filteredDocuments, setFilteredDocuments] = useState(allDocumentsData);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(allDocumentsData[0]);
-  
+  const [allDocumentsData, setAllDocumentsData] = useState<Document[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedWorkflows, setSelectedWorkflows] = useState<string[]>([]);
 
   const [isFilterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(filterRef, () => setFilterOpen(false));
 
-  const categories = useMemo(() => [...new Set(allDocumentsData.map(doc => doc.category))], []);
-  const workflows = useMemo(() => ['New', 'On Verification', 'On Review', 'Conflict', 'Accepted'], []);
-  
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (!API_URL) {
+        setError("Konfigurasi API URL hilang.");
+        setIsLoading(false);
+        return;
+      }
+
+      const authToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null; 
+
+      if (!authToken) {
+        setError("Autentikasi diperlukan. Silakan login terlebih dahulu.");
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(`${API_URL}/contracts/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          const errorDetail = await response.json().catch(() => ({}));
+          throw new Error(`Gagal mengambil data: ${response.status} ${response.statusText}. Detail: ${errorDetail.detail || errorDetail.message || 'Token mungkin tidak valid/kadaluarsa.'}`);
+        }
+
+        const data = await response.json();
+        
+        const documents: Document[] = data.map(mapBackendToDocument);
+        
+        setAllDocumentsData(documents);
+        setFilteredDocuments(documents);
+        if (documents.length > 0) {
+          setSelectedDocument(documents[0]); 
+        }
+
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError('Terjadi kesalahan saat mengambil data');
+        setAllDocumentsData([]);
+        setFilteredDocuments([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+        fetchDocuments();
+    }
+  }, []); 
+
+  const categories = useMemo(() => [...new Set(allDocumentsData.map(doc => doc.category))], [allDocumentsData]);
+
   const handleCategoryChange = (category: string) => setSelectedCategories(prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]);
-  const handleWorkflowChange = (workflow: string) => setSelectedWorkflows(prev => prev.includes(workflow) ? prev.filter(w => w !== workflow) : [...prev, workflow]);
   const clearFilters = () => {
     setSelectedCategories([]);
-    setSelectedWorkflows([]);
   };
 
   const columns: ColumnDef<Document>[] = [
-    { accessorKey: 'title', header: 'Judul', className: 'col-span-3 font-semibold text-slate-800 group-hover:text-blue-default truncate' },
-    { accessorKey: 'category', header: 'Kategori', className: 'col-span-2' },
-    { 
-      accessorKey: 'workflow', 
-      header: 'Workflow', 
-      className: 'col-span-3',
-      cell: (row) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${workflowColorMap[row.workflow]}`}>
-          {row.workflow}
-        </span>
-      )
-    },
-    { accessorKey: 'createdAt', header: 'Created at', className: 'col-span-2' },
+    { accessorKey: 'title', header: 'Judul', className: 'col-span-3 font-semibold text-slate-800 group-hover:text-blue-default truncate' }, 
+    { accessorKey: 'category', header: 'Kategori', className: 'col-span-5' }, 
+    { accessorKey: 'createdAt', header: 'Created at', className: 'col-span-2' }, 
     { accessorKey: 'updatedAt', header: 'Updated at', className: 'col-span-2' },
   ];
+
 
   useEffect(() => {
     let filtered = allDocumentsData;
     if (searchTerm) { filtered = filtered.filter(doc => doc.title.toLowerCase().includes(searchTerm.toLowerCase())); }
     if (selectedCategories.length > 0) { filtered = filtered.filter(doc => selectedCategories.includes(doc.category)); }
-    if (selectedWorkflows.length > 0) { filtered = filtered.filter(doc => selectedWorkflows.includes(doc.workflow)); }
     setFilteredDocuments(filtered);
-  }, [searchTerm, selectedCategories, selectedWorkflows]);
+    
+    if (selectedDocument && !filtered.find(doc => doc.id === selectedDocument.id)) {
+      setSelectedDocument(filtered.length > 0 ? filtered[0] : null);
+    } else if (!selectedDocument && filtered.length > 0) {
+      setSelectedDocument(filtered[0]);
+    }
 
-  const activeFilterCount = selectedCategories.length + selectedWorkflows.length;
+  }, [searchTerm, selectedCategories, allDocumentsData, selectedDocument]);
+
+  const activeFilterCount = selectedCategories.length;
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-white rounded-xl border border-slate-200 p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-default"></div>
+        <p className="mt-4 text-xl font-semibold text-slate-700">Memuat data kontrak...</p>
+        <p className="text-sm text-slate-500">Mohon tunggu sebentar.</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-red-50 rounded-xl border border-red-200 p-8 text-center">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="mt-4 text-xl font-bold text-red-700">Gagal Mengambil Data 😔</p>
+        <p className="mt-2 text-md text-red-600">Pesan Error: {error}</p>
+        <p className="text-sm text-red-500">Pastikan Anda sudah *login* dan API *backend* berjalan dengan baik.</p>
+      </div>
+    );
+  }
+  
+  if (allDocumentsData.length === 0 && !isLoading) {
+      return (
+          <div className="flex flex-col items-center justify-center h-full min-h-[400px] bg-white rounded-xl border border-slate-200 p-8 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-blue-default" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="mt-4 text-xl font-bold text-slate-700">Data Kontrak Kosong</p>
+              <p className="mt-2 text-md text-slate-500">Tidak ada kebijakan standar yang ditemukan di *backend* saat ini.</p>
+          </div>
+      );
+  }
 
   return (
     <div className="flex h-full gap-2">
       <div className="w-2/3 flex flex-col">
         <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col h-full">
           <div className="relative" ref={filterRef}>
-            <TableToolbar 
-              searchTerm={searchTerm} 
+            <TableToolbar
+              searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               onFilterClick={() => setFilterOpen(!isFilterOpen)}
             />
@@ -103,18 +209,7 @@ export default function StandardPoliciesPage() {
                       ))}
                     </div>
                   </div>
-                  <div className="border-t border-slate-200"></div>
-                  <div>
-                    <h4 className="font-semibold text-sm text-slate-800 mb-2">Workflow Status</h4>
-                    <div className="space-y-2">
-                      {workflows.map((workflow) => (
-                        <label key={workflow} className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-                          <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-default focus:ring-blue-default" checked={selectedWorkflows.includes(workflow)} onChange={() => handleWorkflowChange(workflow)}/>
-                          {workflow}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Div Workflow Status Dihapus */}
                   {activeFilterCount > 0 && (
                     <>
                       <div className="border-t border-slate-200"></div>

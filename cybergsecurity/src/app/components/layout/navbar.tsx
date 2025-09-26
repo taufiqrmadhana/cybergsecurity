@@ -87,28 +87,32 @@ export const Navbar = () => {
 
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center space-x-12">
           {navLinks.map((link) => {
-            const isActive = pathname.startsWith(link.href);
-            return (
-              <div key={link.name} className="relative">
-                <Link
-                  href={link.href}
-                  className={`px-3 py-2 text-sm font-semibold transition-colors duration-200
-                    ${
-                      isActive
-                        ? 'text-white'
-                        : 'text-gray-300 hover:text-white'
-                    }
-                  `}
-                >
-                  {link.name}
-                </Link>
-                {isActive && (
-                  <div className="absolute -bottom-9.5 left-1/2 -translate-x-1/2 w-22 h-5 bg-[var(--color-accent-lightest)] rounded-lg"></div>
-                )}
-              </div>
-            );
+              const isActive = pathname.startsWith(link.href);
+              return (
+                  <div key={link.name} className="relative">
+                      {isActive && (
+                          <span 
+                              className="absolute inset-0 bg-white opacity-20 rounded-full transition-all duration-300 ease-in-out"
+                              aria-hidden="true" 
+                          ></span>
+                      )}
+                      
+                      <Link
+                          href={link.href}
+                          className={`relative z-10 px-3 py-2 text-sm font-semibold transition-colors duration-200
+                              ${
+                                  isActive
+                                      ? 'text-white font-bold' 
+                                      : 'text-gray-300 hover:text-white'
+                              }
+                          `}
+                      >
+                          {link.name}
+                      </Link>
+                  </div>
+              );
           })}
-        </div>
+      </div>
 
         <div className="relative" ref={dropdownRef}>
           <div 
