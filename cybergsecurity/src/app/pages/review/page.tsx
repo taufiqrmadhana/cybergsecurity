@@ -1,9 +1,9 @@
-import React from 'react'
+import PDFPreview from '@/app/components/review/PdfViewer'
 
 const ReviewPage = () => {
   return (
     <div>
-      <h1>Review Page</h1>
+      <PDFPreview></PDFPreview>
     </div>
   )
 }
