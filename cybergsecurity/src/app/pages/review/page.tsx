@@ -1,101 +1,64 @@
 'use client'
 
+import { AIAssistantPanel } from '@/app/components/review/AIAssistantPanel'
 import { DocumentListSidebar } from '@/app/components/review/DocumentListSidebar'
 import { EditorPanel } from '@/app/components/review/EditorPanel'
-import { SendHorizonal } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import WordEditor from '@/app/components/review/WordEditor'
+import { FileProvider, useFileContext } from '@/app/contexts/FileContext'
+import { FileText, FolderOpen, Plus } from 'lucide-react'
+import { useState } from 'react'
 
 type Message = { sender: 'user' | 'ai'; text: string }
 type Status = 'Conflict' | 'Approved' | 'Checking'
 
-const TypingIndicator = () => (
-  <div className="flex items-end gap-2">
-    <div className="max-w-[80%] rounded-t-xl rounded-br-xl bg-slate-100 px-4 py-3">
-      <div className="flex items-center justify-center gap-1.5">
-        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]"></span>
-        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]"></span>
-        <span className="h-2 w-2 animate-bounce rounded-full bg-slate-400"></span>
-      </div>
-    </div>
-  </div>
-)
-
-interface AIAssistantPanelProps {
-  llmResponse: string
-  chatMessages: Message[]
-  status: Status
-  isAiTyping: boolean
-  isSummarizing: boolean
-  onSendMessage: (m: string) => void
-  onCheckStatus: () => void
-  onSummarize: (q: string) => void
-}
-
-const AIAssistantPanel = ({
-  llmResponse,
-  chatMessages,
-  status,
-  isAiTyping,
-  isSummarizing,
-  onSendMessage,
-  onCheckStatus,
-  onSummarize
-}: AIAssistantPanelProps) => {
-  const [newMessage, setNewMessage] = useState('')
-  const chatRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight
-  }, [chatMessages, isAiTyping, llmResponse, isSummarizing])
-  const statusStyles: Record<Status, string> = {
-    Approved: 'bg-green-50 text-green-700 border border-green-200',
-    Conflict: 'bg-red-50 text-red-700 border border-red-200',
-    Checking: 'bg-amber-50 text-amber-700 border border-amber-200',
-  }
-  const handleSubmit = (e: React.FormEvent | React.MouseEvent) => {
-    e.preventDefault()
-    if (newMessage.trim()) {
-      onSendMessage(newMessage)
-      setNewMessage('')
-    }
-  }
+const ViewerLandingScreen = () => {
+  const { createNewFile, triggerFileInput, isLoading } = useFileContext()
   return (
-    <div className="w-96 flex-shrink-0 flex flex-col bg-white h-full border-l border-slate-200 shadow-sm">
-      <div className="p-6 border-b border-slate-100 bg-slate-50 flex flex-col h-64">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-semibold text-base text-slate-800">AI Summary</h3>
-          <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusStyles[status]}`}>{status}</span>
+    <div className="flex-1 overflow-y-auto bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8">
+      <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-lg w-full">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <FileText size={40} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Document Viewer</h1>
+          <p className="text-gray-600">Upload a document to view and analyze</p>
         </div>
-        <div className="flex-1 overflow-y-auto pr-1 text-sm text-slate-600 leading-relaxed">
-          {isSummarizing ? <TypingIndicator /> : llmResponse ? <ReactMarkdown>{llmResponse}</ReactMarkdown> : <span className="text-slate-400 italic">No summary available yet</span>}
+        <div className="space-y-4">
+          <button
+            onClick={triggerFileInput}
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center disabled:opacity-50"
+          >
+            <FolderOpen size={20} className="mr-2" />
+            {isLoading ? 'Loading...' : 'Upload Document'}
+          </button>
+          <button
+            onClick={createNewFile}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-semibold hover:border-blue-400 hover:shadow-md transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
+          >
+            <Plus size={20} className="mr-2" />
+            Create New Document
+          </button>
         </div>
-        <div className="grid grid-cols-2 gap-3 mt-4">
-          <button onClick={onCheckStatus} className="w-full bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-800 transition-all">Check Status</button>
-          <button onClick={() => onSummarize("Ringkas kontrak ini")} className="w-full bg-white border border-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-50 transition-colors">Summarize</button>
-        </div>
+        <div className="mt-8 text-center text-sm text-gray-400">Supports: DOCX, PDF, RTF, TXT, HTML</div>
       </div>
-      <div ref={chatRef} className="flex-1 p-6 overflow-y-auto flex flex-col gap-5">
-        {chatMessages.length === 0 && !isAiTyping && <span className="text-slate-400 text-sm italic">Mulai percakapan dengan AI...</span>}
-        {chatMessages.map((msg, i) => (
-          <div key={i} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] rounded-t-xl px-4 py-3 shadow-sm ${msg.sender === 'user' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-bl-xl' : 'bg-slate-100 text-slate-800 rounded-br-xl'}`}>
-              <div className="text-sm leading-relaxed"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 shadow-2xl">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="text-gray-700 font-medium">Processing document...</span>
             </div>
           </div>
-        ))}
-        {isAiTyping && <TypingIndicator />}
-      </div>
-      <div className="p-4 border-t border-slate-100 bg-white">
-        <div className="relative flex items-center">
-          <input type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e as any) }}} placeholder="Tanya pada AI..." className="w-full bg-slate-50 text-sm text-slate-800 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none pr-12"/>
-          <button onClick={handleSubmit} className="absolute right-2 h-8 w-8 bg-slate-800 text-white rounded-lg flex items-center justify-center hover:bg-slate-900 transition-colors disabled:opacity-50" disabled={!newMessage.trim() || isAiTyping}><SendHorizonal className="h-4 w-4"/></button>
         </div>
-      </div>
+      )}
     </div>
   )
 }
 
-const ReviewPage = () => {
+const MainContent = () => {
+  const [currentView, setCurrentView] = useState<'viewer' | 'editor'>('viewer')
+  const { currentFile } = useFileContext()
   const [llmResponse, setLlmResponse] = useState('')
   const [chatMessages, setChatMessages] = useState<Message[]>([])
   const [status, setStatus] = useState<Status>('Checking')
@@ -108,11 +71,16 @@ const ReviewPage = () => {
     setChatMessages(p => [...p, { sender: 'user', text: message }])
     setIsAiTyping(true)
     try {
-      const r = await fetch(`${API_BASE_URL}/chatbot/chat/stream`, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: sessionId, message }) })
-      if (!r.ok || !r.body) throw new Error("stream error")
+      const r = await fetch(`${API_BASE_URL}/chatbot/chat/stream`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, message })
+      })
+      if (!r.ok || !r.body) throw new Error('stream error')
       const reader = r.body.getReader()
       const decoder = new TextDecoder()
-      let aiText = ""
+      let aiText = ''
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
@@ -127,7 +95,7 @@ const ReviewPage = () => {
         })
       }
     } catch {
-      setChatMessages(p => [...p, { sender: 'ai', text: "⚠️ Error saat streaming" }])
+      setChatMessages(p => [...p, { sender: 'ai', text: '⚠️ Error saat streaming' }])
     }
     setIsAiTyping(false)
   }
@@ -135,16 +103,18 @@ const ReviewPage = () => {
   const handleSummarize = async (query: string) => {
     setIsSummarizing(true)
     try {
-      const r = await fetch(`${API_BASE_URL}/chatbot/summarize`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session_id: sessionId, query }) })
+      const r = await fetch(`${API_BASE_URL}/chatbot/summarize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, query })
+      })
       if (r.ok) {
         const d = await r.json()
         setLlmResponse(d.response)
-        // setChatMessages(p => [...p, { sender: 'ai', text: `Ringkasan: ${d.response}` }])
       }
     } catch {
-      const fallback = "Ringkasan gagal diambil."
+      const fallback = 'Ringkasan gagal diambil.'
       setLlmResponse(fallback)
-      // setChatMessages(p => [...p, { sender: 'ai', text: fallback }])
     }
     setIsSummarizing(false)
   }
@@ -153,26 +123,94 @@ const ReviewPage = () => {
     setStatus('Checking')
     setIsSummarizing(true)
     try {
-      const r = await fetch(`${API_BASE_URL}/api/compliance/evaluate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_url: "https://storage.googleapis.com/bucket/contract.pdf" }) })
+      const r = await fetch(`${API_BASE_URL}/api/compliance/evaluate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file_url: 'https://storage.googleapis.com/bucket/contract.pdf' })
+      })
       if (!r.ok) throw new Error()
       const d = await r.json()
-      setStatus(d.status === "comply" ? "Approved" : "Conflict")
+      setStatus(d.status === 'comply' ? 'Approved' : 'Conflict')
       setLlmResponse(d.summary)
       setChatMessages(p => [...p, { sender: 'ai', text: `Compliance result: ${d.summary}` }])
     } catch {
       setStatus('Conflict')
-      setChatMessages(p => [...p, { sender: 'ai', text: "⚠️ Error saat compliance check" }])
+      setChatMessages(p => [...p, { sender: 'ai', text: '⚠️ Error saat compliance check' }])
     }
     setIsSummarizing(false)
   }
 
   return (
-    <div className="flex h-full">
-      <DocumentListSidebar />
-      <EditorPanel />
-      <AIAssistantPanel llmResponse={llmResponse} chatMessages={chatMessages} status={status} isAiTyping={isAiTyping} isSummarizing={isSummarizing} onSendMessage={handleSendMessage} onCheckStatus={handleCheckStatus} onSummarize={handleSummarize}/>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white border-b border-slate-200 px-6 py-3 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-slate-900">Document Management System</h1>
+          <div className="flex bg-slate-100 rounded-lg p-1">
+            <button
+              onClick={() => setCurrentView('viewer')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentView === 'viewer' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Document Viewer
+            </button>
+            <button
+              onClick={() => setCurrentView('editor')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentView === 'editor' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Word Editor
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 flex overflow-hidden">
+        {currentView === 'viewer' ? (
+          <>
+            <DocumentListSidebar />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto">{currentFile ? <EditorPanel /> : <ViewerLandingScreen />}</div>
+            </div>
+            <AIAssistantPanel
+              llmResponse={llmResponse}
+              chatMessages={chatMessages}
+              status={status}
+              isAiTyping={isAiTyping}
+              isSummarizing={isSummarizing}
+              onSendMessage={handleSendMessage}
+              onCheckStatus={handleCheckStatus}
+              onSummarize={handleSummarize}
+            />
+          </>
+        ) : (
+          <>
+            <div className="flex-1 overflow-hidden overflow-y-auto">
+              <WordEditor />
+            </div>
+            <AIAssistantPanel
+              llmResponse={llmResponse}
+              chatMessages={chatMessages}
+              status={status}
+              isAiTyping={isAiTyping}
+              isSummarizing={isSummarizing}
+              onSendMessage={handleSendMessage}
+              onCheckStatus={handleCheckStatus}
+              onSummarize={handleSummarize}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
 
-export default ReviewPage
+export default function ReviewPage() {
+  return (
+    <FileProvider>
+      <div className="flex h-full overflow-hidden">
+        <MainContent />
+      </div>
+    </FileProvider>
+  )
+}

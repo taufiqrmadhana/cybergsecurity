@@ -1,14 +1,4 @@
-'use client';
-
-import { useRef } from 'react';
-import { useOnClickOutside } from '@/app/hooks/useOnclickOutside';
-import { FileClock } from 'lucide-react';
-
-const versions = [
-  { id: 3, editor: 'Neo Cicero', time: '26 Sep 2025, 11:15 PM' },
-  { id: 2, editor: 'Jane Doe', time: '25 Sep 2025, 08:42 AM' },
-  { id: 1, editor: 'John Smith', time: '24 Sep 2025, 02:10 PM' },
-];
+import { useFileContext } from '../../contexts/FileContext';
 
 interface VersionHistoryPopupProps {
   isOpen: boolean;
@@ -16,38 +6,54 @@ interface VersionHistoryPopupProps {
 }
 
 export const VersionHistoryPopup = ({ isOpen, onClose }: VersionHistoryPopupProps) => {
-  const popupRef = useRef<HTMLDivElement>(null);
-  useOnClickOutside(popupRef, onClose);
+  const { files, currentFile, switchToFile, deleteFile } = useFileContext();
 
   if (!isOpen) return null;
 
   return (
-    <div
-      ref={popupRef}
-      className="absolute top-14 right-4 w-72 bg-white rounded-xl shadow-2xl border border-slate-200 z-20
-                 origin-top-right animate-scale-in-ver-top"
-    >
+    <div className="absolute top-12 right-12 bg-white border border-slate-200 rounded-lg shadow-lg w-80 max-h-96 overflow-y-auto z-10">
       <div className="p-4 border-b border-slate-100">
-        <h3 className="font-semibold text-slate-800">Version History</h3>
-        <p className="text-xs text-slate-500">List of document edits</p>
+        <h3 className="font-semibold text-sm">Document History</h3>
       </div>
-      <div className="p-2 max-h-64 overflow-y-auto">
-        <ul className="space-y-1">
-          {versions.map((version) => (
-            <li
-              key={version.id}
-              className="p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+      <div className="p-2">
+        {files.length === 0 ? (
+          <div className="p-4 text-center text-slate-500 text-sm">
+            No documents uploaded yet
+          </div>
+        ) : (
+          files.map((file) => (
+            <div
+              key={file.id}
+              className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${
+                currentFile?.id === file.id 
+                  ? 'bg-blue-50 border border-blue-200' 
+                  : 'hover:bg-slate-50'
+              }`}
+              onClick={() => {
+                switchToFile(file.id);
+                onClose();
+              }}
             >
-              <div className="flex items-center gap-3">
-                <FileClock className="h-5 w-5 text-slate-400" />
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">Version {version.id}</p>
-                  <p className="text-xs text-slate-500">{version.time}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="font-medium text-sm text-slate-900">{file.name}</div>
+                  <div className="text-xs text-slate-500">
+                    {file.format.toUpperCase()} • {new Date(file.uploadedAt).toLocaleDateString()}
+                  </div>
                 </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteFile(file.id);
+                  }}
+                  className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded"
+                >
+                  Delete
+                </button>
               </div>
-            </li>
-          ))}
-        </ul>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

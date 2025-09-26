@@ -1,7 +1,7 @@
 // src/app/components/review/DocumentListSidebar.tsx
 'use client';
 
-import { FileText, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FileText } from 'lucide-react';
 
 const newDocuments = [
   { id: 'doc-a', name: 'Dokumen A' },
