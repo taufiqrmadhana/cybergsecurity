@@ -1,3 +1,5 @@
+'use client';
+
 import { CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -20,7 +22,7 @@ export const InfoPanel = () => {
         {/* Logo and Title */}
         <div className="mb-2">
            <Image 
-             src='/images/logo.png' 
+             src='/images/logo.svg' 
              alt="NeoContract Logo" 
              width={300}
              height={75} 
