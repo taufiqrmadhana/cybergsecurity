@@ -1,8 +1,35 @@
 @import "tailwindcss";
 
+@tailwind utilities;
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --color-blue-lightest: #dbe4fe;
+  --color-blue-light: #c1d2ff;
+  --color-blue-medium: #9bb4ff;
+  --color-blue-default: #5262ff; 
+  --color-blue-dark: #3334f8;
+  --color-blue-darkest: #21247e;
+
+  --color-accent-lightest: #fff7ed;
+  --color-accent-light: #fed8aa;
+  --color-accent-default: #fdbb74;
+  --color-accent-dark: #fa7415;
+  --color-accent-darkest: #c3420b;
+  
+  --color-grey-dark: #898989;
+  --color-grey-light: #dfdfdf;
+  
+  --color-white: #FFFFFF;
+  --color-dark: #131200;
+  
+  --color-stats1: #fef7b9;
+  --color-stats2: #d0fafc;
+  --color-stats3: #f1d8ff;
+  --color-stats4: #ffb1b1;
+  --color-stats5: #cbffc6;
 }
 
 @theme inline {
@@ -22,5 +49,22 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-roboto);
+}
+
+@keyframes scale-in-ver-top {
+  0% {
+    transform: scaleY(0) scaleX(0.8);
+    transform-origin: 100% 0%;
+    opacity: 0;
+  }
+  100% {
+    transform: scaleY(1) scaleX(1);
+    transform-origin: 100% 0%;
+    opacity: 1;
+  }
+}
+
+.animate-scale-in-ver-top {
+  animation: scale-in-ver-top 0.2s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
 }
