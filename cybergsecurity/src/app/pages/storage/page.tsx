@@ -95,7 +95,7 @@ const TableView = ({ data, selectedContract, onSelectContract }: TableViewProps)
                 columns={contractColumns}
                 selectedItem={selectedContract}
                 onSelectItem={onSelectContract}
-                gridClassName="grid-cols-4 col-span-3 col-span-2 col-span-3"
+                gridClassName="grid-cols-12 col-span-3 col-span-2 col-span-3"
             />
         </div>
     );
@@ -115,13 +115,11 @@ const StoragePage = () => {
     const handleUpdateContractStatus = (contractId: number | string, newStatus: ContractStatus) => {
         setContracts(prevContracts => 
             prevContracts.map(contract => 
-                // FIX: Membandingkan ID numerik agar konsisten
                 Number(contract.id) === Number(contractId) 
                     ? { ...contract, status: newStatus } 
                     : contract
             )
         );
-        // Memperbarui preview jika kontrak yang dipindahkan sedang dipilih
         if (selectedContract && Number(selectedContract.id) === Number(contractId)) {
             setSelectedContract(prev => prev ? { ...prev, status: newStatus } : null);
         }

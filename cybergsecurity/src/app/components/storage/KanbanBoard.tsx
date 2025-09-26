@@ -41,11 +41,9 @@ export const KanbanBoard = ({ contracts, onSelectContract, onUpdateStatus }: Kan
     if (!destination) return;
     if (destination.droppableId === source.droppableId) return;
 
-    // FIX: Mengkonversi ID string dari DND ke Number agar cocok dengan ID di state
     const contractId = Number(draggableId); 
     const newStatus = destination.droppableId as ContractStatus;
     
-    // Panggil handler dari StoragePage
     onUpdateStatus(contractId, newStatus);
   };
 

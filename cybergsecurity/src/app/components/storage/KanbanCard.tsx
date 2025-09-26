@@ -24,7 +24,6 @@ export const KanbanCard = ({ contract, index, onClick }: KanbanCardProps) => {
           {...provided.dragHandleProps}
           style={{
             ...provided.draggableProps.style,
-            // Styling tambahan saat item sedang di-drag
             opacity: snapshot.isDragging ? 0.9 : 1,
             backgroundColor: snapshot.isDragging ? '#f1f5f9' : 'white',
           }}

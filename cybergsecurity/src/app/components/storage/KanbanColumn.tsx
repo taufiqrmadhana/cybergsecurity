@@ -23,7 +23,6 @@ export const KanbanColumn = ({ columnId, title, contracts, onSelectContract }: K
             className="flex-1 overflow-y-auto pr-2"
             {...provided.droppableProps}
             ref={provided.innerRef}
-            // Tambahkan background styling saat di-hover/drag
             style={{
               backgroundColor: snapshot.isDraggingOver ? 'rgba(0,0,0,0.05)' : 'transparent',
               minHeight: '20px'
