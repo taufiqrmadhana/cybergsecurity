@@ -1,27 +1,78 @@
 'use client'; 
 
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState, useRef } from 'react';
-import { useOnClickOutside } from '@/app/hooks/useOnclickOutside';
-import { LogOut } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { jwtDecode } from 'jwt-decode';
+
+interface TokenPayload {
+  email: string;
+  role: string;
+  exp: number;
+}
 
 const navLinks = [
   { name: 'Dashboard', href: '/pages/dashboard' },
   { name: 'Storage', href: '/pages/storage' },
   { name: 'Review', href: '/pages/review' },
+  { name: 'Settings', href: '/pages/settings' },
 ];
 
 export const Navbar = () => {
+  const router = useRouter();
   const pathname = usePathname();
-  const [isProfileOpen, setProfileOpen] = useState(false);
-  const profileRef = useRef(null);
+  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useOnClickOutside(profileRef, () => setProfileOpen(false));
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    
+    if (token) {
+      try {
+        const decoded = jwtDecode<TokenPayload>(token);
+
+        const userEmail = decoded.email || 'User';
+        const userRole = decoded.role || 'Guest';
+
+        setUser({
+          name: userEmail.split('@')[0],
+          role: userRole.charAt(0).toUpperCase() + userRole.slice(1),
+        });
+
+      } catch (error) {
+        localStorage.removeItem('access_token');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    
+    setUser(null);
+
+    router.push('/auth/login');
+  };
+
+  const userName = user?.name || 'User';
+  const userRole = user?.role || '...';
 
   return (
-    <nav className="relative bg-[var(--color-blue-darkest)] text-white shadow-md z-50">
+    <nav className="relative bg-[var(--color-blue-darkest)] text-white shadow-md">
       <div className="w-full px-10 py-3 flex justify-between items-center">
         
         <Link href="/pages/dashboard" className="flex items-center gap-3">
@@ -41,7 +92,7 @@ export const Navbar = () => {
               <div key={link.name} className="relative">
                 <Link
                   href={link.href}
-                  className={`relative px-4 py-2 text-sm font-semibold transition-colors duration-200 z-10
+                  className={`px-3 py-2 text-sm font-semibold transition-colors duration-200
                     ${
                       isActive
                         ? 'text-white'
@@ -50,22 +101,19 @@ export const Navbar = () => {
                   `}
                 >
                   {link.name}
-                  
-                  {isActive && (
-                    <div className="absolute inset-0 -z-10 flex items-center justify-center">
-                      <div className="w-full h-8 bg-[var(--color-blue-lightest)] rounded-full opacity-30"></div>
-                    </div>
-                  )}
                 </Link>
+                {isActive && (
+                  <div className="absolute -bottom-9.5 left-1/2 -translate-x-1/2 w-22 h-5 bg-[var(--color-accent-lightest)] rounded-lg"></div>
+                )}
               </div>
             );
           })}
         </div>
 
-        <div className="relative" ref={profileRef}>
+        <div className="relative" ref={dropdownRef}>
           <div 
-            onClick={() => setProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-3 hover:bg-white/10 p-2 rounded-lg cursor-pointer transition-colors duration-200"
+            className="flex items-center gap-3 hover:opacity-90 p-2 rounded-lg cursor-pointer transition-colors duration-200"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
             <Image
               src="/images/avatar.png" 
@@ -74,24 +122,20 @@ export const Navbar = () => {
               height={32}
               className="rounded-full"
             />
-            <div className="hidden md:block">
-              <p className="font-semibold text-sm text-white">Muhammad Neo Cicero Codes</p>
-              <p className="text-xs opacity-70 text-white">Staff</p>
+            <div className="hidden md:block text-[var(--color-blue-darkest)]">
+              <p className="font-semibold text-sm text-white">{userName}</p>
+              <p className="text-xs opacity-70 text-white">{userRole}</p>
             </div>
           </div>
-
-          {isProfileOpen && (
-            <div 
-              className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-200
-                         origin-top-right animate-scale-in-ver-top"
-            >
-              <div className="p-2">
-                <div className="my-1 h-px bg-slate-100" />
-                <a href="/auth/login" className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-600 rounded-md hover:bg-red-50 transition-colors font-medium">
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </a>
-              </div>
+          
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                Logout
+              </button>
             </div>
           )}
         </div>

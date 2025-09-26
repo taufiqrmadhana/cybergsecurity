@@ -1,3 +1,7 @@
+'use client';
+
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '@/app/components/layout/navbar';
 
 export default function PagesLayout({
@@ -5,6 +9,16 @@ export default function PagesLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+      router.push('/auth/login'); 
+    }
+  }, [router]);
+
   return (
     <div className="flex flex-col h-screen">
       <Navbar />
