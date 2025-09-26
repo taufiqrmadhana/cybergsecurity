@@ -46,14 +46,14 @@ export const Sidebar = () => {
 
           if (link.subLinks) {
             return (
-              <div key={link.name}>
+              <div key={link.name} >
                 <button
                   onClick={() => setWorkflowOpen(!isWorkflowOpen)}
                   className={getParentLinkClass(link, isParentActive)}
                 >
                   <span>{link.name}</span>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-300 ${
+                    className={`h-4 w-4 transition-transform duration-300 cursor-pointer ${
                       isWorkflowOpen ? 'rotate-180' : ''
                     }`}
                   />

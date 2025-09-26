@@ -9,16 +9,20 @@ type StatCardProps = {
   change: string;
   Icon: LucideIcon;
   iconBgColor: string;
+  iconColor: string;
   changeIcon: React.ReactNode;
 };
 
-export const StatCard = ({ title, value, description, change, Icon, iconBgColor, changeIcon }: StatCardProps) => {
+export const StatCard = ({ title, value, description, change, Icon, iconBgColor, iconColor, changeIcon }: StatCardProps) => {
   return (
-    <div className="bg-white p-6 rounded-xl border border-[var(--color-grey-light)] flex flex-col gap-4">
+    <div className="
+      bg-white p-6 rounded-xl border border-slate-200 flex flex-col gap-4
+      transition-all duration-300 ease-in-out hover:scale-[1.01] hover:shadow-lg hover:border-slate-300
+    ">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-[var(--color-dark)]">{title}</span>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${iconBgColor}`}>
-          <Icon className="h-4 w-4 text-[var(--color-grey-dark)]" />
+        <span className="text-sm font-extrabold text-[var(--color-blue-darkest)]">{title}</span>
+        <div className={`w-9 h-9 rounded-md flex items-center justify-center ${iconBgColor}`}>
+          <Icon className={`h-4 w-4 ${iconColor}`} />
         </div>
       </div>
       <div>

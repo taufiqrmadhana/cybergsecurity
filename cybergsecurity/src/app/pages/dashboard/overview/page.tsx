@@ -26,7 +26,8 @@ export default function OverviewPage() {
           description="New Contracts"
           change="8 new today"
           Icon={Plus}
-          iconBgColor="bg-[var(--color-blue-lightest)]"
+          iconColor="text-yellow-700"
+          iconBgColor="bg-[var(--color-stats1)]"
           changeIcon={<ArrowUp className="h-3 w-3 text-green-600" />}
         />
         <StatCard 
@@ -35,7 +36,8 @@ export default function OverviewPage() {
           description="On Verification"
           change="5% from last week"
           Icon={Eye}
-          iconBgColor="bg-[var(--color-accent-lightest)]"
+          iconColor="text-blue-700"
+          iconBgColor="bg-[var(--color-stats2)]"
           changeIcon={<ArrowUp className="h-3 w-3 text-green-600" />}
         />
         <StatCard 
@@ -44,7 +46,8 @@ export default function OverviewPage() {
           description="On Review"
           change="12 in progress"
           Icon={FileSearch}
-          iconBgColor="bg-blue-50"
+          iconColor="text-purple-700"
+          iconBgColor="bg-[var(--color-stats3)]"
           changeIcon={<ArrowUp className="h-3 w-3 text-blue-600" />}
         />
         <StatCard 
@@ -53,7 +56,8 @@ export default function OverviewPage() {
           description="Conflicts Found"
           change="3 new issues"
           Icon={AlertTriangle}
-          iconBgColor="bg-red-50"
+          iconColor="text-red-700"
+          iconBgColor="bg-[var(--color-stats4)]"
           changeIcon={<ArrowUp className="h-3 w-3 text-red-600" />}
         />
         <StatCard 
@@ -62,16 +66,17 @@ export default function OverviewPage() {
           description="Accepted Contracts"
           change="18% completion rate"
           Icon={CheckCircle}
-          iconBgColor="bg-green-50"
+          iconColor="text-green-900"
+          iconBgColor="bg-[var(--color-stats5)]"
           changeIcon={<ArrowUp className="h-3 w-3 text-green-600" />}
         />
       </div>
 
-      {/* Bagian Bawah: Chart dan Daftar Deadline */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 ">
         <div className="lg:col-span-2">
           <DocumentStatusChart />
         </div>
+
         <div>
           <DeadlineList />
         </div>

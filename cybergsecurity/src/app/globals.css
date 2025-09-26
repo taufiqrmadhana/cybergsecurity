@@ -18,14 +18,18 @@
   --color-accent-default: #fdbb74;
   --color-accent-dark: #fa7415;
   --color-accent-darkest: #c3420b;
-
+  
   --color-grey-dark: #898989;
   --color-grey-light: #dfdfdf;
-
+  
   --color-white: #FFFFFF;
   --color-dark: #131200;
-
   
+  --color-stats1: #fef7b9;
+  --color-stats2: #d0fafc;
+  --color-stats3: #f1d8ff;
+  --color-stats4: #ffb1b1;
+  --color-stats5: #cbffc6;
 }
 
 @theme inline {

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navLinks = [
-  { name: 'Dashboard', href: '/pages/dashboard/overview' },
+  { name: 'Dashboard', href: '/pages/dashboard' },
   { name: 'Storage', href: '/pages/storage' },
   { name: 'Review', href: '/pages/review' },
   { name: 'Settings', href: '/pages/settings' },
@@ -18,7 +18,7 @@ export const Navbar = () => {
     <nav className="relative bg-[var(--color-blue-darkest)] text-white shadow-md overflow-hidden">
       <div className="w-full px-10 py-3 flex justify-between items-center">
         
-        <Link href="/dashboard" className="flex items-center gap-3">
+        <Link href="/pages/dashboard" className="flex items-center gap-3">
           <Image 
             src="/images/logo2.svg" 
             alt="NeoContract Logo"
@@ -53,7 +53,7 @@ export const Navbar = () => {
           })}
         </div>
 
-        <div className="flex items-center gap-3 bg-[var(--color-blue-lightest)] hover:opacity-90 p-2 rounded-lg cursor-pointer transition-colors duration-200">
+        <div className="flex items-center gap-3 hover:opacity-90 p-2 rounded-lg cursor-pointer transition-colors duration-200">
           <Image
             src="/images/avatar.png" 
             alt="User Avatar"
@@ -62,8 +62,8 @@ export const Navbar = () => {
             className="rounded-full"
           />
           <div className="hidden md:block text-[var(--color-blue-darkest)]">
-            <p className="font-semibold text-sm">Muhammad Neo Cicero Codes</p>
-            <p className="text-xs opacity-70">Staff</p>
+            <p className="font-semibold text-sm text-white">Muhammad Neo Cicero Codes</p>
+            <p className="text-xs opacity-70 text-white">Staff</p>
           </div>
         </div>
 
