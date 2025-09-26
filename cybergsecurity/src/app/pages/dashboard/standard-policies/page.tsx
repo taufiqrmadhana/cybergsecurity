@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DocumentTable, type ColumnDef } from '@/app/components/policies/DocumentTable';
+import { TableToolbar } from '@/app/components/policies/TableToolbar';
+import { DataTable, type ColumnDef } from '@/app/components/policies/DataTable';
 import { DocumentPreview } from '@/app/components/policies/DocumentPreview';
 import type { Document } from '@/app/types/document';
 
@@ -18,8 +19,6 @@ const allDocumentsData: Document[] = [
   { id: 'STD-010', title: 'Tarif Layanan Bongkar Muat 2025', createdAt: '2025-05-01', updatedAt: '2025-05-15', category: 'Kepelabuhan', description: 'Dokumen tarif resmi untuk semua layanan bongkar muat di pelabuhan.' },
   { id: 'STD-011', title: 'Perjanjian Lisensi Penggunaan Merek', createdAt: '2025-04-18', updatedAt: '2025-04-28', category: 'Kemitraan', description: 'Perjanjian lisensi untuk penggunaan merek dagang oleh pihak ketiga.' },
   { id: 'STD-012', title: 'Kontrak Pemeliharaan Sistem IT', createdAt: '2025-04-10', updatedAt: '2025-04-22', category: 'Layanan TI', description: 'Kontrak tahunan untuk pemeliharaan semua sistem internal.' },
-  { id: 'STD-013', title: 'Perjanjian Lisensi Penggunaan Merek', createdAt: '2025-04-18', updatedAt: '2025-04-28', category: 'Kemitraan', description: 'Perjanjian lisensi untuk penggunaan merek dagang oleh pihak ketiga.' },
-  { id: 'STD-014', title: 'Kontrak Pemeliharaan Sistem IT', createdAt: '2025-04-10', updatedAt: '2025-04-22', category: 'Layanan TI', description: 'Kontrak tahunan untuk pemeliharaan semua sistem internal.' },
 ];
 
 export default function StandardPoliciesPage() {
@@ -41,17 +40,17 @@ export default function StandardPoliciesPage() {
     { 
       accessorKey: 'createdAt', 
       header: 'Created at', 
-      className: 'col-span-2' 
+      className: 'col-span-2'
     },
     { 
       accessorKey: 'updatedAt', 
       header: 'Updated at', 
-      className: 'col-span-2' 
+      className: 'col-span-2'
     },
     { 
       accessorKey: 'category', 
       header: 'Kategori', 
-      className: 'col-span-1' 
+      className: 'col-span-1'
     },
   ];
 
@@ -65,16 +64,22 @@ export default function StandardPoliciesPage() {
   return (
     <div className="flex h-full gap-2">
       <div className="w-2/3 flex flex-col">
-        <DocumentTable
-          data={filteredDocuments}
-          columns={columns}
-          selectedItem={selectedDocument}
-          onSelectItem={setSelectedDocument}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          gridClassName="grid-cols-12" 
-        />
+        <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col h-full">
+          <TableToolbar 
+            searchTerm={searchTerm} 
+            onSearchChange={setSearchTerm} 
+            onFilterClick={() => console.log('Filter button clicked')}
+          />
+          <DataTable
+            data={filteredDocuments}
+            columns={columns}
+            selectedItem={selectedDocument}
+            onSelectItem={setSelectedDocument}
+            gridClassName="grid-cols-12"
+          />
+        </div>
       </div>
+      
       <div className="w-1/3 flex flex-col">
         <DocumentPreview document={selectedDocument} />
       </div>
