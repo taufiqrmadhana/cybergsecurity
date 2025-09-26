@@ -1,10 +1,10 @@
 'use client';
 
+import { Clock, Upload } from 'lucide-react';
 import { useState } from 'react';
 import PDFViewer from './PdfViewer';
-import { VersionHistoryPopup } from './VersionHistoryPopup';
 import { UploadPopup } from './UploadPopup';
-import { Clock, Upload } from 'lucide-react';
+import { VersionHistoryPopup } from './VersionHistoryPopup';
 
 export const EditorPanel = () => {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);

@@ -148,7 +148,7 @@ const ReviewPage = () => {
   const [status, setStatus] = useState<Status>('Checking');
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}`);
-  const API_BASE_URL = 'http://localhost:8000';
+  const API_BASE_URL = 'http://127.0.0.1:8000';
 
   const handleSendMessage = async (message: string) => {
     setChatMessages(prev => [...prev, { sender: 'user', text: message }]);
