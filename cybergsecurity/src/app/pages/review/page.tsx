@@ -56,7 +56,7 @@ const ReviewPage = () => {
         llmResponse={llmResponse}
         chatMessages={chatMessages}
         status={status}
-        isAiTyping={isAiTyping} // Berikan state loading ke komponen anak
+        isAiTyping={isAiTyping} 
         onSendMessage={handleSendMessage}
         onCheckStatus={handleCheckStatus}
       />
