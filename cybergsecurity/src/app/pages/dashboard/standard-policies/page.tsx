@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DocumentTable } from '@/app/components/policies/DocumentTable';
+import { DocumentTable, type ColumnDef } from '@/app/components/policies/DocumentTable';
 import { DocumentPreview } from '@/app/components/policies/DocumentPreview';
 import type { Document } from '@/app/types/document';
 
@@ -27,6 +27,34 @@ export default function StandardPoliciesPage() {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(allDocumentsData[0]);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const columns: ColumnDef<Document>[] = [
+    { 
+      accessorKey: 'id', 
+      header: 'ID Standar', 
+      className: 'col-span-2'
+    },
+    { 
+      accessorKey: 'title', 
+      header: 'Judul', 
+      className: 'col-span-4 font-semibold text-slate-800 group-hover:text-blue-default truncate',
+    },
+    { 
+      accessorKey: 'createdAt', 
+      header: 'Created at', 
+      className: 'col-span-2' 
+    },
+    { 
+      accessorKey: 'updatedAt', 
+      header: 'Updated at', 
+      className: 'col-span-2' 
+    },
+    { 
+      accessorKey: 'category', 
+      header: 'Kategori', 
+      className: 'col-span-1' 
+    },
+  ];
+
   useEffect(() => {
     const filtered = allDocumentsData.filter(doc =>
       doc.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -38,11 +66,13 @@ export default function StandardPoliciesPage() {
     <div className="flex h-full gap-2">
       <div className="w-2/3 flex flex-col">
         <DocumentTable
-          documents={filteredDocuments}
-          selectedDocument={selectedDocument}
-          onSelectDocument={setSelectedDocument}
+          data={filteredDocuments}
+          columns={columns}
+          selectedItem={selectedDocument}
+          onSelectItem={setSelectedDocument}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
+          gridClassName="grid-cols-12" 
         />
       </div>
       <div className="w-1/3 flex flex-col">
