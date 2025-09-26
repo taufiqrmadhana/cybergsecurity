@@ -3,7 +3,6 @@
 import { Search, Filter, UploadCloud, Table, LayoutList } from 'lucide-react'; 
 import React from 'react';
 
-// --- Komponen ViewToggle diintegrasikan di sini ---
 const ViewToggle = ({ currentMode, setMode }) => {
   const buttonClass = (mode: string) => 
     `p-2 text-sm font-medium rounded-md transition-colors 
@@ -30,13 +29,11 @@ const ViewToggle = ({ currentMode, setMode }) => {
     </div>
   );
 };
-// --------------------------------------------------
 
 interface TableToolbarProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onFilterClick: () => void; 
-  // Props baru untuk Toggle View dan Upload
   viewMode: 'tabular' | 'kanban';
   onViewModeChange: (mode: 'tabular' | 'kanban') => void;
   onUploadClick: () => void;
@@ -53,7 +50,6 @@ export const TableToolbar = ({
   return (
     <div className="flex items-center justify-between gap-4 mb-6 flex-shrink-0 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
       
-      {/* Search Bar dan Filter */}
       <div className="flex items-center gap-4 flex-1 max-w-xl">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -75,16 +71,13 @@ export const TableToolbar = ({
         </button>
       </div>
 
-      {/* Toggle View dan Upload Button */}
       <div className="flex items-center gap-4">
         
-        {/* Toggle View */}
         <ViewToggle 
             currentMode={viewMode} 
             setMode={onViewModeChange} 
         />
 
-        {/* Upload Button */}
         <button
           onClick={onUploadClick}
           className="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl hover:bg-indigo-700 transition-colors flex items-center gap-2 cursor-pointer"
