@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sidebar } from '@/app/components/layout/sidebar'; 
 import { DocumentPreview } from '@/app/components/policies/DocumentPreview'; 
 import { KanbanBoard } from '@/app/components/storage/KanbanBoard'; 
 import { DataTable, ColumnDef } from '@/app/components/policies/DataTable'; 
@@ -139,8 +138,6 @@ const StoragePage = () => {
 
     return (
         <div className="flex min-h-screen bg-white">
-            
-            <Sidebar />
             
             <main className="flex-1 p-8 overflow-y-auto">
                 <div className="flex flex-col h-full min-h-[calc(100vh-64px)]"> 
