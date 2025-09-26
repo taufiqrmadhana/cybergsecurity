@@ -11,17 +11,6 @@ type SidebarLink = { name: string; href: string; subLinks?: SubLink[] };
 const sidebarLinks: SidebarLink[] = [
   { name: 'Overview', href: '/pages/dashboard/overview' },
   { name: 'Standards & Policies', href: '/pages/dashboard/standard-policies' },
-  {
-    name: 'Workflow',
-    href: '/pages/dashboard/workflow',
-    subLinks: [
-      { name: 'New', href: '/pages/dashboard/workflow/new' },
-      { name: 'On Verification', href: '/pages/dashboard/workflow/verification' },
-      { name: 'On Review', href: '/pages/dashboard/workflow/review' },
-      { name: 'Conflict', href: '/pages/dashboard/workflow/conflict' },
-      { name: 'Accepted', href: '/pages/dashboard/workflow/accepted' },
-    ],
-  },
 ];
 
 export const Sidebar = () => {
