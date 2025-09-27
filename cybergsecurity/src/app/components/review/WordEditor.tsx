@@ -32,7 +32,13 @@ const WordEditor = () => {
       setHistoryIndex(0);
       setIsSaved(true);
     }
-  }, [currentFile?.id]);
+  }, [currentFile]);
+
+  useEffect(() => {
+    if (currentFile?.content) {
+      setIsSaved(false);
+    }
+  }, [currentFile?.content]);
 
   const handleInput = () => {
     if (!editorRef.current || !currentFile) return;
