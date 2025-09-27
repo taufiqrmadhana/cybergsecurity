@@ -1,46 +1,82 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DocumentPreview } from '@/app/components/policies/DocumentPreview'; 
 import { KanbanBoard } from '@/app/components/storage/KanbanBoard'; 
 import { DataTable, ColumnDef } from '@/app/components/policies/DataTable'; 
 import { TableToolbar } from '@/app/components/storage/TableToolbar'; 
-// import { Search, Filter, UploadCloud, Table, LayoutList } from 'lucide-react'; 
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export type ContractStatus = 
-  | "NEW" 
-  | "ON_VERIFICATION" 
-  | "ON_REVIEW" 
-  | "ACCEPTED" 
-  | "CONFLICT";
+    | "NEW" 
+    | "ON_VERIFICATION" 
+    | "ON_REVIEW" 
+    | "ACCEPTED" 
+    | "CONFLICT";
 
 export type ContractCategory = 
-  | "LAYANAN_TEKNOLOGI_INFORMASI" 
-  | "PENGADAAN_BARANG_JASA" 
-  | "KEMITRAAN_GLOBAL" 
-  | "INTEGRASI_LOGISTIK" 
-  | "JASA_KEPELABUHAN_DIGITAL";
+    | "LAYANAN_TEKNOLOGI_INFORMASI" 
+    | "PENGADAAN_BARANG_JASA" 
+    | "KEMITRAAN_GLOBAL" 
+    | "INTEGRASI_LOGISTIK" 
+    | "JASA_KEPELABUHAN_DIGITAL";
 
 export type Contract = {
-    id: number | string;
+    id: number;
     title: string;
     description: string;
     updatedAt: string;
     category: ContractCategory;
     status: ContractStatus;
     deadline: string;
+    session_id: number;
 };
 
-const initialContracts: Contract[] = [
-    { id: 1, title: 'Kontrak Integrasi Payment Gateway', description: 'Perjanjian layanan teknologi untuk integrasi pembayaran.', updatedAt: '2025-09-25', deadline: '2025-10-15', category: 'LAYANAN_TEKNOLOGI_INFORMASI', status: 'ON_VERIFICATION' },
-    { id: 2, title: 'Perjanjian Pengadaan Server A', description: 'Dokumen pengadaan untuk infrastruktur server baru.', updatedAt: '2025-09-20', deadline: '2025-09-30', category: 'PENGADAAN_BARANG_JASA', status: 'NEW' },
-    { id: 3, title: 'MoU Kemitraan Pelabuhan Eropa', description: 'Nota kesepahaman dengan mitra global di Eropa.', updatedAt: '2025-09-15', deadline: '2025-11-01', category: 'KEMITRAAN_GLOBAL', status: 'ON_REVIEW' },
-    { id: 4, title: 'Kontrak Layanan Digital Maritim', description: 'Perjanjian penyediaan jasa kepelabuhan digital.', updatedAt: '2025-09-10', deadline: '2025-10-25', category: 'JASA_KEPELABUHAN_DIGITAL', status: 'CONFLICT' },
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const CONTRACTS_ENDPOINT = `${API_BASE_URL}/contracts`;
+const SESSIONS_ENDPOINT = `${API_BASE_URL}/sessions`;
+
+type SessionMinimal = {
+    id: number;
+    contract_id: number;
+    due_date: string;
+    status: ContractStatus;
+};
+
+type SortKey = 'title' | 'deadline' | 'status';
+type SortDirection = 'asc' | 'desc';
+
+const CATEGORY_OPTIONS: ContractCategory[] = [
+    "LAYANAN_TEKNOLOGI_INFORMASI", 
+    "PENGADAAN_BARANG_JASA", 
+    "KEMITRAAN_GLOBAL", 
+    "INTEGRASI_LOGISTIK", 
+    "JASA_KEPELABUHAN_DIGITAL"
+];
+
+const STATUS_OPTIONS: ContractStatus[] = [
+    "NEW", 
+    "ON_VERIFICATION", 
+    "ON_REVIEW", 
+    "ACCEPTED", 
+    "CONFLICT"
 ];
 
 const getCategoryDisplay = (category: ContractCategory) => {
-  return category.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ');
+    return category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
+
+const api = axios.create();
+api.interceptors.request.use((config) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
 
 interface TableViewProps {
     data: Contract[];
@@ -70,7 +106,7 @@ const contractColumns: ColumnDef<Contract>[] = [
         className: 'col-span-2',
         cell: (row) => (
              <span className="font-medium text-slate-700">
-                {row.deadline}
+                 {row.deadline}
              </span>
         ),
     },
@@ -101,41 +137,154 @@ const TableView = ({ data, selectedContract, onSelectContract }: TableViewProps)
 };
 
 const StoragePage = () => {
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('tabular'); 
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const [sortKey, setSortKey] = useState<SortKey>('deadline');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+    const [filterStatus, setFilterStatus] = useState<ContractStatus | 'ALL'>('ALL');
+    const [filterCategory, setFilterCategory] = useState<ContractCategory | 'ALL'>('ALL');
+
+
+    const fetchAndMergeData = useCallback(async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const [contractsResponse, sessionsResponse] = await Promise.all([
+                api.get<any[]>(CONTRACTS_ENDPOINT),
+                api.get<SessionMinimal[]>(SESSIONS_ENDPOINT)
+            ]);
+            
+            const sessionsData = sessionsResponse.data;
+            
+            const sessionMap = sessionsData.reduce((acc, session) => {
+                if (!acc[session.contract_id]) {
+                    acc[session.contract_id] = session;
+                }
+                return acc;
+            }, {} as Record<number, SessionMinimal>);
+
+            const mergedData: Contract[] = contractsResponse.data.map(contract => {
+                const session = sessionMap[contract.id];
+                
+                const defaultContract: Contract = {
+                    id: contract.id,
+                    title: contract.title,
+                    description: contract.description,
+                    updatedAt: contract.updated_at ? contract.updated_at.split('T')[0] : 'N/A',
+                    category: contract.jenis_kontrak || 'LAYANAN_TEKNOLOGI_INFORMASI',
+                    deadline: '2099-12-31',
+                    status: 'NEW', 
+                    session_id: 0,
+                };
+
+                if (!session) return defaultContract;
+
+                return {
+                    ...defaultContract,
+                    category: contract.jenis_kontrak,
+                    deadline: session.due_date.split('T')[0], 
+                    status: session.status,
+                    session_id: session.id,
+                } as Contract;
+            });
+            
+            setContracts(mergedData);
+            if (!selectedContract && mergedData.length > 0) {
+                setSelectedContract(mergedData[0]);
+            }
+
+        } catch (err) {
+            console.error('Fetch Data Error:', err);
+            if (axios.isAxiosError(err) && err.response?.status === 401) {
+                localStorage.removeItem('access_token');
+                router.push('/auth/login'); 
+            } else {
+                setError('Failed to load data from API. Check server status and network.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, [router, selectedContract]);
+
+    useEffect(() => {
+        fetchAndMergeData();
+    }, [fetchAndMergeData]);
+
+    const handleUpdateContractStatus = useCallback(async (contractId: number, newStatus: ContractStatus) => {
+        const contractToUpdate = contracts.find(c => c.id === contractId);
+
+        if (!contractToUpdate || !contractToUpdate.session_id) {
+            setError('Error: Contract session ID not found for update.');
+            return;
+        }
+
+        setContracts(prevContracts => 
+            prevContracts.map(c => c.id === contractId ? { ...c, status: newStatus } : c)
+        );
+        if (selectedContract && selectedContract.id === contractId) {
+            setSelectedContract(prev => prev ? { ...prev, status: newStatus } : null);
+        }
+
+        try {
+            const updatePayload = { status: newStatus };
+            await api.patch(`${SESSIONS_ENDPOINT}/${contractToUpdate.session_id}`, updatePayload);
+            
+        } catch (err) {
+            console.error('Update Status Error:', err);
+            setError('Failed to update contract status on the server. Data reverted.');
+            fetchAndMergeData(); 
+        }
+    }, [contracts, selectedContract, fetchAndMergeData]);
+
+    const processedContracts = useMemo(() => {
+        let result = [...contracts];
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+        result = result.filter(contract => {
+            const matchesStatus = filterStatus === 'ALL' || contract.status === filterStatus;
+            const matchesCategory = filterCategory === 'ALL' || contract.category === filterCategory;
+            return matchesStatus && matchesCategory;
+        });
+
+        if (lowerCaseSearchTerm) {
+            result = result.filter(contract => 
+                contract.title.toLowerCase().includes(lowerCaseSearchTerm) ||
+                contract.category.toLowerCase().replace(/_/g, ' ').includes(lowerCaseSearchTerm) ||
+                contract.status.toLowerCase().replace(/_/g, ' ').includes(lowerCaseSearchTerm) ||
+                contract.description.toLowerCase().includes(lowerCaseSearchTerm)
+            );
+        }
+
+        result.sort((a, b) => {
+            let aValue: string | number = a[sortKey];
+            let bValue: string | number = b[sortKey];
+
+            if (aValue < bValue) {
+                return sortDirection === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortDirection === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+
+        return result;
+    }, [contracts, searchTerm, sortKey, sortDirection, filterStatus, filterCategory]);
 
     const handleSelectContract = (contract: Contract) => {
         setSelectedContract(contract);
     };
 
-    const handleUpdateContractStatus = (contractId: number | string, newStatus: ContractStatus) => {
-        setContracts(prevContracts => 
-            prevContracts.map(contract => 
-                Number(contract.id) === Number(contractId) 
-                    ? { ...contract, status: newStatus } 
-                    : contract
-            )
-        );
-        if (selectedContract && Number(selectedContract.id) === Number(contractId)) {
-            setSelectedContract(prev => prev ? { ...prev, status: newStatus } : null);
-        }
-    };
-
     const handleUploadClick = () => {
         alert('Upload Modal/Function Triggered!');
     };
-
-    useEffect(() => {
-        setTimeout(() => {
-            setContracts(initialContracts);
-            setSelectedContract(initialContracts[0] || null);
-            setIsLoading(false);
-        }, 800);
-    }, []);
-
+    
     return (
         <div className="flex min-h-screen bg-white">
             
@@ -150,23 +299,74 @@ const StoragePage = () => {
                         onViewModeChange={setViewMode}
                         onUploadClick={handleUploadClick}
                     />
+                    
+                    {error && (
+                        <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg mb-4" role="alert">
+                            {error}
+                        </div>
+                    )}
+
+                    <div className="flex items-center gap-4 mb-4 pt-2">
+                        <p className="text-sm text-slate-600">Showing {processedContracts.length} contracts.</p>
+                        
+                        <select 
+                            value={sortKey} 
+                            onChange={(e) => setSortKey(e.target.value as SortKey)}
+                            className="border p-1 rounded text-sm"
+                        >
+                            <option value="deadline">Sort by Deadline</option>
+                            <option value="title">Sort by Title</option>
+                            <option value="status">Sort by Status</option>
+                        </select>
+                        <button 
+                            onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                            className="border p-1 rounded text-sm bg-slate-100 hover:bg-slate-200"
+                        >
+                            {sortDirection === 'asc' ? 'ASC ↑' : 'DESC ↓'}
+                        </button>
+
+                        <select 
+                            value={filterStatus} 
+                            onChange={(e) => setFilterStatus(e.target.value as ContractStatus | 'ALL')}
+                            className="border p-1 rounded text-sm"
+                        >
+                            <option value="ALL">Filter Status: All</option>
+                            {STATUS_OPTIONS.map(status => (
+                                <option key={status} value={status}>{status}</option>
+                            ))}
+                        </select>
+
+                        <select 
+                            value={filterCategory} 
+                            onChange={(e) => setFilterCategory(e.target.value as ContractCategory | 'ALL')}
+                            className="border p-1 rounded text-sm"
+                        >
+                            <option value="ALL">Filter Category: All</option>
+                            {CATEGORY_OPTIONS.map(category => (
+                                <option key={category} value={category}>{getCategoryDisplay(category)}</option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div className={`flex flex-1 mt-4 ${viewMode === 'tabular' ? 'space-x-6' : ''}`}> 
                     
                         <div className="flex flex-col flex-1 min-w-0">
                             {isLoading ? (
-                                <div className="text-center p-10 text-slate-500">Loading contracts...</div>
+                                <div className="text-center p-10 text-slate-500">
+                                    <svg className="animate-spin h-5 w-5 mr-3 inline" viewBox="0 0 24 24"></svg>
+                                    Loading contracts...
+                                </div>
                             ) : (
                                 <div className="flex-1 overflow-hidden">
                                     {viewMode === 'kanban' ? (
                                         <KanbanBoard 
-                                            contracts={contracts} 
+                                            contracts={processedContracts} 
                                             onSelectContract={handleSelectContract}
                                             onUpdateStatus={handleUpdateContractStatus}
                                         />
                                     ) : (
                                         <TableView 
-                                            data={contracts}
+                                            data={processedContracts}
                                             selectedContract={selectedContract}
                                             onSelectContract={handleSelectContract}
                                         />
