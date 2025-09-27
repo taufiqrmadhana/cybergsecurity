@@ -16,7 +16,6 @@ const navLinks = [
   { name: 'Dashboard', href: '/pages/dashboard' },
   { name: 'Storage', href: '/pages/storage' },
   { name: 'Review', href: '/pages/review' },
-  { name: 'Settings', href: '/pages/settings' },
 ];
 
 export const Navbar = () => {
