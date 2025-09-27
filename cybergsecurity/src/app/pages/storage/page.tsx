@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { DocumentPreview } from '@/app/components/policies/DocumentPreview'; 
-import { KanbanBoard } from '@/app/components/storage/KanbanBoard'; 
-import { DataTable, ColumnDef } from '@/app/components/policies/DataTable'; 
-import { TableToolbar } from '@/app/components/storage/TableToolbar'; 
+import { DocumentPreview } from '@/app/components/policies/DocumentPreview';
+import { KanbanBoard } from '@/app/components/storage/KanbanBoard';
+import { DataTable, ColumnDef } from '@/app/components/policies/DataTable';
+import { TableToolbar } from '@/app/components/storage/TableToolbar';
+import { ContractUploadForm } from '@/app/components/storage/ContractUploadForm';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
@@ -125,13 +126,15 @@ const contractColumns: ColumnDef<Contract>[] = [
 const TableView = ({ data, selectedContract, onSelectContract }: TableViewProps) => {
     return (
         <div className="flex-1 bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden min-h-0">
-            <DataTable
-                data={data}
-                columns={contractColumns}
-                selectedItem={selectedContract}
-                onSelectItem={onSelectContract}
-                gridClassName="grid-cols-12 col-span-3 col-span-2 col-span-3"
-            />
+            <div className="max-h-full overflow-y-auto">
+                <DataTable
+                    data={data}
+                    columns={contractColumns}
+                    selectedItem={selectedContract}
+                    onSelectItem={onSelectContract}
+                    gridClassName="grid-cols-12 col-span-3 col-span-2 col-span-3"
+                />
+            </div>
         </div>
     );
 };
@@ -144,6 +147,7 @@ const StoragePage = () => {
     const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
     const [sortKey, setSortKey] = useState<SortKey>('deadline');
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -282,9 +286,14 @@ const StoragePage = () => {
     };
 
     const handleUploadClick = () => {
-        alert('Upload Modal/Function Triggered!');
+        setIsUploadModalOpen(true);
     };
     
+    const handleUploadSuccess = () => {
+        fetchAndMergeData();
+        setIsUploadModalOpen(false);
+    };
+
     return (
         <div className="flex min-h-screen bg-white">
             
@@ -307,7 +316,7 @@ const StoragePage = () => {
                     )}
 
                     <div className="flex items-center gap-4 mb-4 pt-2">
-                        <p className="text-sm text-slate-600">Showing {processedContracts.length} contracts.</p>
+                        <p className="text-sm text-slate-600">Menampilkan {processedContracts.length} kontrak.</p>
                         
                         <select 
                             value={sortKey} 
@@ -350,7 +359,7 @@ const StoragePage = () => {
 
                     <div className={`flex flex-1 mt-4 ${viewMode === 'tabular' ? 'space-x-6' : ''}`}> 
                     
-                        <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex flex-col flex-1 min-w-0 h-full">
                             {isLoading ? (
                                 <div className="text-center p-10 text-slate-500">
                                     <svg className="animate-spin h-5 w-5 mr-3 inline" viewBox="0 0 24 24"></svg>
@@ -383,6 +392,12 @@ const StoragePage = () => {
                     </div>
                 </div>
             </main>
+            
+            <ContractUploadForm
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                onSuccess={handleUploadSuccess}
+            />
         </div>
     );
 };

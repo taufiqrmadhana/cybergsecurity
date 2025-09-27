@@ -61,14 +61,7 @@ export const TableToolbar = ({
             className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
-        
-        <button 
-          onClick={onFilterClick} 
-          className="bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer"
-        >
-          <Filter className="h-4 w-4" />
-          <span>Filter</span>
-        </button>
+      
       </div>
 
       <div className="flex items-center gap-4">

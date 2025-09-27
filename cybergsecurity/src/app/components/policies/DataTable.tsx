@@ -23,7 +23,7 @@ export const DataTable = <T extends { id: string | number }>({
   gridClassName,
 }: DataTableProps<T>) => {
   return (
-    <div className="flex-1 overflow-y-auto pr-2 min-h-0">
+    <div className="flex-1 overflow-y-scroll pr-2 min-h-0">
       {/* Header Tabel */}
       <div className={`grid ${gridClassName} gap-4 sticky top-0 bg-slate-50 p-3 rounded-t-lg text-sm font-semibold text-slate-600 border-b`}>
         {columns.map((col) => (

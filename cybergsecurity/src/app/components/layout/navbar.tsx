@@ -99,7 +99,7 @@ export const Navbar = () => {
                       
                       <Link
                           href={link.href}
-                          className={`relative z-10 px-3 py-2 text-sm font-semibold transition-colors duration-200
+                          className={`relative z-10 px-3 py-2 text-md font-semibold transition-colors duration-200
                               ${
                                   isActive
                                       ? 'text-white font-bold' 
