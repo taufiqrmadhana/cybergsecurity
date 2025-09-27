@@ -5,9 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import axios from 'axios';
+import { jwtDecode } from "jwt-decode";
 
+interface TokenPayload {
+  email: string;
+  role: string;
+  exp: number;
+}
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-const LOGIN_ENDPOINT = `${API_BASE_URL}/auth/login`;
+const LOGIN_ENDPOINT = `${API_BASE_URL}/api/auth/login`;
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -30,45 +36,45 @@ export const LoginForm = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    setError('');
-    setSuccess('');
-    setIsLoading(true);
+  setError('');
+  setSuccess('');
+  setIsLoading(true);
 
-    try {
-      const response = await axios.post(LOGIN_ENDPOINT, {
-        email: formData.email,
-        password: formData.password,
-      });
+  try {
+    const response = await axios.post(LOGIN_ENDPOINT, {
+      email: formData.email,
+      password: formData.password,
+    });
 
-      // 1. Store the token from the response body into localStorage
-      const { access_token } = response.data;
-      if (access_token) {
-        localStorage.setItem('access_token', access_token);
-      }
+    const { access_token } = response.data;
+    if (access_token) {
+      localStorage.setItem("access_token", access_token);
 
-      setSuccess('Login successful! Redirecting...');
-      
-      // 2. Redirect to the dashboard
-      router.push('/pages/dashboard/overview');
+      // decode token
+      const decoded = jwtDecode<TokenPayload>(access_token);
 
-    } catch (err) {
-      // 3. Adjust error message handling based on your API structure
-      if (axios.isAxiosError(err) && err.response) {
-        // Your API returns the error message in the 'detail' field for 401
-        const errorMessage = err.response.data.detail || 'Login failed. Check server status.';
-        setError(errorMessage);
-        console.error('Login Error:', err.response.data);
+      setSuccess("Login successful! Redirecting...");
+
+      if (decoded.role === "admin") {
+        router.push("/pages/admin/dashboard");
       } else {
-        setError('A network error occurred. Could not connect to the API.');
-        console.error('Network Error:', err);
+        router.push("/pages/dashboard/overview");
       }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response) {
+      const errorMessage = err.response.data.detail || "Login failed. Check server status.";
+      setError(errorMessage);
+    } else {
+      setError("A network error occurred. Could not connect to the API.");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full bg-white p-6">
